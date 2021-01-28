@@ -24,3 +24,9 @@ Just run the following command in the repo directory:
 ```
 make delete-kind-cluster
 ```
+
+# How can I test the ingress?
+Run the following command in the root folder of the repo:
+```
+make test-ingress
+```
