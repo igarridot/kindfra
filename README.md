@@ -11,7 +11,7 @@ The cluster is configured to do a port-forward from your local machine 80/TCP po
 
 # Installation steps
 - Download this repo
-- Move to the repo directory
+- Move to the root repo directory
 - Run the following commands (this process will install docker, kubectl and kind in your pc, you can execute targets individually):
 ```
 make install-requirements
