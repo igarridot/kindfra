@@ -2,7 +2,7 @@
 An easy way to spin up a development kubernetes cluster with Kind.
 
 # What can I do with this?
-You will be able to create a multinode kubernetes cluster with a few commands.
+You will be able to create a multiworker kubernetes cluster with a few commands.
 The cluster is configured to do a port-forward from your local machine 80/TCP port to the Kind cluster 80/TCP port.
 
 # Pre-requisites
