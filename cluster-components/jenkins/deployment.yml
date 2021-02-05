@@ -32,6 +32,8 @@ spec:
         env:
         - name: JAVA_OPTS
           value: '-Djenkins.install.runSetupWizard=false'
+        - name: CASC_JENKINS_CONFIG
+          value: /var/jenkins_home/casc.yaml
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
