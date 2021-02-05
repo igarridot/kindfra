@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      initContainers:
+      - name: install-jenkins-plugins
+        image: jenkins/jenkins:2.263.3
+        command: ['/bin/sh', '-c']
+        args:
+        - 'mkdir -p /var/jenkins_home/plugins/ && jenkins-plugin-cli -f /usr/share/jenkins/ref/plugins.txt -d /var/jenkins_home/plugins/'
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: plugin-list
+          mountPath: /usr/share/jenkins/ref/
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:2.263.3
+        ports:
+        - containerPort: 8080
+        env:
+        - name: JAVA_OPTS
+          value: '-Djenkins.install.runSetupWizard=false'
+        - name: CASC_JENKINS_CONFIG
+          value: /var/jenkins_home/casc.yaml
+        - name: JENKINS_ADMIN_USERNAME
+          value: admin
+        - name: JENKINS_ADMIN_PASSWORD
+          value: foo
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: casc-config
+          mountPath: /var/jenkins_home/casc.yaml
+          subPath: casc.yaml
+        resources:
+          limits:
+            cpu: 2
+            memory: 4G
+      volumes:
+      - name: jenkins-home
+        emptyDir: {}
+      - name: plugin-list
+        configMap:
+          name: plugin-list
+      - name: casc-config
+        configMap:
+          name: casc-config
+          items:
+          - key: casc.yaml
+            path: casc.yaml
+---

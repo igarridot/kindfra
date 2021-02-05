@@ -4,7 +4,7 @@ CLUSTER_NAME=kind-cluster
 LATEST_KUBECTL_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
 LSB_RELEASE=$$(lsb_release -cs)
 CLUSTER_CONFIG_PATH=cluster-definitions/multinode-ingress-cluster.yaml
-TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test.yaml
+TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
 
 install-docker:
 	@echo "----- INSTALLING DOCKER -----"
@@ -14,7 +14,7 @@ install-docker:
 	    ca-certificates \
             curl \
             gnupg-agent \
-	    software-properties-common 
+	    software-properties-common
 	sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(LSB_RELEASE) stable"
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 	sudo apt-get -y update
@@ -22,7 +22,7 @@ install-docker:
 	-sudo groupadd docker
 	sudo usermod -aG docker ${USER}
 
-install-kubectl: 
+install-kubectl:
 	@echo "----- INSTALLING KUBECTL -----"
 	curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(LATEST_KUBECTL_VERSION)/bin/linux/amd64/kubectl"
 	chmod +x ./kubectl
