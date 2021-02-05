@@ -6,4 +6,4 @@ data:
   casc.yaml: |
     unclassified:
       location:
-      url: http://kind.local/
+        url: http://kind.local/
