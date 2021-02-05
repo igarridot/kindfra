@@ -34,6 +34,10 @@ spec:
           value: '-Djenkins.install.runSetupWizard=false'
         - name: CASC_JENKINS_CONFIG
           value: /var/jenkins_home/casc.yaml
+        - name: JENKINS_ADMIN_USERNAME
+          value: admin
+        - name: JENKINS_ADMIN_PASSWORD
+          value: foo
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home

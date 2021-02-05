@@ -4,6 +4,15 @@ metadata:
   name: casc-config
 data:
   casc.yaml: |
+    jenkins:
+      securityRealm:
+        local:
+          allowsSignup: false
+          users:
+          - id: ${JENKINS_ADMIN_USERNAME}
+            description: Base admin user
+            password: ${JENKINS_ADMIN_PASSWORD}
+
     unclassified:
       location:
         url: http://kind.local/
