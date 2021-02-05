@@ -1,0 +1,12 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jenkins
+spec:
+  selector:
+    app: jenkins
+  ports:
+  - targetPort: 8080
+    port: 80
+---

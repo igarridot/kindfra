@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      initContainers:
+      - name: install-jenkins-plugins
+        image: jenkins/jenkins:2.263.3
+        command: ["/usr/local/bin/install-plugins.sh", "<", "/usr/share/jenkins/ref/plugins.txt"]
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:2.263.3
+        ports:
+        - containerPort: 8080
+        env:
+        - name: JAVA_OPTS
+          value: '-Djenkins.install.runSetupWizard=false'
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: plugins-list
+          mountPath: /usr/share/jenkins/ref/
+        resources:
+          limits:
+            cpu: 2
+            memory: 4G
+      volumes:
+      - name: jenkins-home
+        emptyDir: {}
+      - name: plugins-list
+        configMap:
+          name: plugins-list
+---
