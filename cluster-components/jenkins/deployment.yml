@@ -37,7 +37,7 @@ spec:
           mountPath: /var/jenkins_home
         - name: casc-config
           mountPath: /var/jenkins_home/casc.yaml
-          subPath: /var/jenkins_home/casc.yaml
+          subPath: casc.yaml
         resources:
           limits:
             cpu: 2
