@@ -35,6 +35,9 @@ spec:
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
+        - name: casc-config
+          mountPath: /var/jenkins_home/casc.yaml
+          subPath: /var/jenkins_home/casc.yaml
         resources:
           limits:
             cpu: 2
@@ -45,4 +48,10 @@ spec:
       - name: plugin-list
         configMap:
           name: plugin-list
+      - name: casc-config
+        configMap:
+          name: casc-config
+          items:
+          - key: casc.yaml
+            path: casc.yaml
 ---
