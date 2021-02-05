@@ -17,6 +17,11 @@ spec:
       - name: install-jenkins-plugins
         image: jenkins/jenkins:2.263.3
         command: ["/usr/local/bin/install-plugins.sh", "<", "/usr/share/jenkins/ref/plugins.txt"]
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        - name: plugin-list
+          mountPath: /usr/share/jenkins/ref/
       containers:
       - name: jenkins
         image: jenkins/jenkins:2.263.3
@@ -28,8 +33,6 @@ spec:
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
-        - name: plugins-list
-          mountPath: /usr/share/jenkins/ref/
         resources:
           limits:
             cpu: 2
@@ -37,7 +40,7 @@ spec:
       volumes:
       - name: jenkins-home
         emptyDir: {}
-      - name: plugins-list
+      - name: plugin-list
         configMap:
-          name: plugins-list
+          name: plugin-list
 ---
