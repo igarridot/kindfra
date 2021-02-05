@@ -16,7 +16,9 @@ spec:
       initContainers:
       - name: install-jenkins-plugins
         image: jenkins/jenkins:2.263.3
-        command: ['jenkins-plugin-cli', '-f', '/var/jenkins_home/plugins.txt', '-d', '/var/jenkins_home/plugins']
+        command: ['/bin/sh', '-c']
+        args:
+        - 'mkdir -p /var/jenkins_home/plugins/ && jenkins-plugin-cli -f /usr/share/jenkins/ref/plugins.txt -d /var/jenkins_home/plugins/'
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
