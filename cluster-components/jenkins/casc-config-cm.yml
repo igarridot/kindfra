@@ -4,6 +4,15 @@ metadata:
   name: casc-config
 data:
   casc.yaml: |
+    credentials:
+    system:
+      domainCredentials:
+      - credentials:
+        - gitHubApp:
+            appID: "99470"
+            description: "Local Kind cluster GitHUb org integration"
+            id: "Jenkins-KindLocal"
+            privateKey: "${GITHUB_ORG_PRIVATE_KEY}"
     jenkins:
       authorizationStrategy:
         loggedInUsersCanDoAnything:
@@ -15,7 +24,10 @@ data:
           - id: ${JENKINS_ADMIN_USERNAME}
             description: Base admin user
             password: ${JENKINS_ADMIN_PASSWORD}
-
     unclassified:
       location:
         url: http://kind.local/
+      gitHubConfiguration:
+        apiRateLimitChecker: ThrottleForNormalize
+      gitHubPluginConfig:
+        hookUrl: "http://kind.local/github-webhook/"
