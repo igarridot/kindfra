@@ -31,3 +31,26 @@ data:
         apiRateLimitChecker: ThrottleForNormalize
       gitHubPluginConfig:
         hookUrl: "http://kind.local/github-webhook/"
+      globalLibraries:
+        libraries:
+        - defaultVersion: "master"
+          implicit: true
+          name: "igarridot"
+          retriever:
+            modernSCM:
+              scm:
+                github:
+                  configuredByUrl: true
+                  credentialsId: "Jenkins-KindLocal"
+                  id: "8d9d6a06-89c1-4bb1-a15d-bd719473794b"
+                  repoOwner: "igarridot"
+                  repository: "jenkins-libraries"
+                  repositoryUrl: "https://github.com/igarridot/jenkins-libraries/"
+                  traits:
+                  - gitHubBranchDiscovery:
+                      strategyId: 1
+                  - gitHubPullRequestDiscovery:
+                      strategyId: 1
+                  - gitHubForkDiscovery:
+                      strategyId: 1
+                      trust: "gitHubTrustPermissions"
