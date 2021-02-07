@@ -40,9 +40,9 @@ spec:
           value: foo
         - name: GITHUB_ORG_PRIVATE_KEY
           valueFrom:
-          secretKeyRef:
-            name: jenkins-org
-            key: private-key
+            secretKeyRef:
+              name: jenkins-org
+              key: private-key
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
