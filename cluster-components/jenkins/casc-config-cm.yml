@@ -5,10 +5,10 @@ metadata:
 data:
   casc.yaml: |
     credentials:
-    system:
-      domainCredentials:
-      - credentials:
-        - gitHubApp:
+      system:
+        domainCredentials:
+        - credentials:
+          - gitHubApp:
             appID: "99470"
             description: "Local Kind cluster GitHUb org integration"
             id: "Jenkins-KindLocal"
