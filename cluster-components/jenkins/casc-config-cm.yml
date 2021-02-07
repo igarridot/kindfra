@@ -9,10 +9,10 @@ data:
         domainCredentials:
         - credentials:
           - gitHubApp:
-            appID: "99470"
-            description: "Local Kind cluster GitHUb org integration"
-            id: "Jenkins-KindLocal"
-            privateKey: "${GITHUB_ORG_PRIVATE_KEY}"
+              appID: "99470"
+              description: "Local Kind cluster GitHUb org integration"
+              id: "Jenkins-KindLocal"
+              privateKey: "${GITHUB_ORG_PRIVATE_KEY}"
     jenkins:
       authorizationStrategy:
         loggedInUsersCanDoAnything:
