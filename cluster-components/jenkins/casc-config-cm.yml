@@ -35,7 +35,7 @@ data:
       globalLibraries:
         libraries:
         - defaultVersion: "${DEFAULT_GLOBAL_LIBRARIES_VERSION}"
-          implicit: true
+          implicit: false
           name: "${GLOBAL_LIBRARIES_REPO_OWNER}"
           retriever:
             modernSCM:
