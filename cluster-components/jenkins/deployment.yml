@@ -34,10 +34,32 @@ spec:
           value: '-Djenkins.install.runSetupWizard=false'
         - name: CASC_JENKINS_CONFIG
           value: /var/jenkins_home/casc.yaml
+        - name: JENKINS_URL
+          value: "http://kind.local/"
         - name: JENKINS_ADMIN_USERNAME
           value: admin
         - name: JENKINS_ADMIN_PASSWORD
-          value: foo
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-org
+              key: admin-pass
+        - name: GITHUB_APP_ID
+          value: "99470"
+        - name: CREDENTIALS_ID
+          value: Jenkins-KindLocal
+        - name: DEFAULT_GLOBAL_LIBRARIES_VERSION
+          value: "master"
+        - name: GLOBAL_LIBRARIES_REPO_OWNER
+          value: "igarridot"
+        - name: GLOBAL_LIBRARIES_REPO_NAME
+          value: "jenkins-libraries"
+        - name: GLOBAL_LIBRARIES_REPO_URL
+          value: "https://github.com/igarridot/jenkins-libraries/"
+        - name: GITHUB_ORG_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-org
+              key: private-key
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
