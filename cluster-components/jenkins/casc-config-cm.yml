@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,9 +10,9 @@ data:
         domainCredentials:
         - credentials:
           - gitHubApp:
-              appID: "99470"
+              appID: "${GITHUB_APP_ID}"
               description: "Local Kind cluster GitHUb org integration"
-              id: "Jenkins-KindLocal"
+              id: "${CREDENTIALS_ID}"
               privateKey: "${GITHUB_ORG_PRIVATE_KEY}"
     jenkins:
       authorizationStrategy:
@@ -26,26 +27,25 @@ data:
             password: ${JENKINS_ADMIN_PASSWORD}
     unclassified:
       location:
-        url: http://kind.local/
+        url: "${JENKINS_URL}"
       gitHubConfiguration:
         apiRateLimitChecker: ThrottleForNormalize
       gitHubPluginConfig:
-        hookUrl: "http://kind.local/github-webhook/"
+        hookUrl: "${JENKINS_URL}github-webhook/"
       globalLibraries:
         libraries:
-        - defaultVersion: "master"
+        - defaultVersion: "${DEFAULT_GLOBAL_LIBRARIES_VERSION}"
           implicit: true
-          name: "igarridot"
+          name: "${GLOBAL_LIBRARIES_REPO_OWNER}"
           retriever:
             modernSCM:
               scm:
                 github:
                   configuredByUrl: true
-                  credentialsId: "Jenkins-KindLocal"
-                  id: "8d9d6a06-89c1-4bb1-a15d-bd719473794b"
-                  repoOwner: "igarridot"
-                  repository: "jenkins-libraries"
-                  repositoryUrl: "https://github.com/igarridot/jenkins-libraries/"
+                  credentialsId: "${CREDENTIALS_ID}"
+                  repoOwner: "${GLOBAL_LIBRARIES_REPO_OWNER}"
+                  repository: "${GLOBAL_LIBRARIES_REPO_NAME}"
+                  repositoryUrl: "${GLOBAL_LIBRARIES_REPO_URL}
                   traits:
                   - gitHubBranchDiscovery:
                       strategyId: 1
@@ -54,3 +54,4 @@ data:
                   - gitHubForkDiscovery:
                       strategyId: 1
                       trust: "gitHubTrustPermissions"
+---
