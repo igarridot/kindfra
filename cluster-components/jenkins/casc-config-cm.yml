@@ -45,7 +45,7 @@ data:
                   credentialsId: "${CREDENTIALS_ID}"
                   repoOwner: "${GLOBAL_LIBRARIES_REPO_OWNER}"
                   repository: "${GLOBAL_LIBRARIES_REPO_NAME}"
-                  repositoryUrl: "${GLOBAL_LIBRARIES_REPO_URL}
+                  repositoryUrl: "${GLOBAL_LIBRARIES_REPO_URL}"
                   traits:
                   - gitHubBranchDiscovery:
                       strategyId: 1
