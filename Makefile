@@ -54,6 +54,8 @@ create-cilium-kind-cluster:
 
 install-cilium-components:
 	kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
+	kubectl wait pod -l "k8s-app=cilium" --for condition=ready -n kube-system
+	kubectl wait pod -l "k8s-app=kube-dns" --for condition=ready -n kube-system
 	kubectl create ns cilium-test
 	kubectl apply -n cilium-test -f https://raw.githubusercontent.com/cilium/cilium/v1.9/examples/kubernetes/connectivity-check/connectivity-check.yaml
 	export CILIUM_NAMESPACE=kube-system
