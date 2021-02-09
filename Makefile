@@ -46,7 +46,7 @@ install-ingress-controller:
 	kubectl wait --namespace ingress-nginx \
 	  --for=condition=ready pod \
 	  --selector=app.kubernetes.io/component=controller \
-	  --timeout=90s
+	  --timeout=300s
 
 create-cilium-kind-cluster:
 	@echo "----- INSTALLING KIND CLUSTER -----"
@@ -61,6 +61,7 @@ install-cilium-components:
 	export CILIUM_NAMESPACE=kube-system
 	kubectl apply -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-hubble-install.yaml
 	kubectl apply -f ./cluster-components/hubble
+	kubectl wait pod -l "k8s-app=hubble-ui" --for condition=ready -n kube-system --timeout=300s
 
 test-ingress:
 	@echo "----- CREATING TEST INGRESS STACK -----"
