@@ -41,7 +41,7 @@ create-kind-cluster:
 	kind create cluster --name $(CLUSTER_NAME) --config $(CLUSTER_CONFIG_PATH)
 
 install-ingress-controller:
-    @echo "----- INSTALLING INGRESS CONTROLLER -----"
+	@echo "----- INSTALLING INGRESS CONTROLLER -----"
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
 	kubectl wait --namespace ingress-nginx \
 	  --for=condition=ready pod \
