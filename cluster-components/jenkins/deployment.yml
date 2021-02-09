@@ -35,7 +35,7 @@ spec:
         - name: CASC_JENKINS_CONFIG
           value: /var/jenkins_home/casc.yaml
         - name: JENKINS_URL
-          value: "http://kind.local/"
+          value: "http://jenkins.local/"
         - name: JENKINS_ADMIN_USERNAME
           value: admin
         - name: JENKINS_ADMIN_PASSWORD

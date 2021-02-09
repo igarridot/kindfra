@@ -5,6 +5,7 @@ LATEST_KUBECTL_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-rele
 LSB_RELEASE=$$(lsb_release -cs)
 CLUSTER_CONFIG_PATH=cluster-definitions/multinode-ingress-cluster.yaml
 TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
+CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.yaml
 
 install-docker:
 	@echo "----- INSTALLING DOCKER -----"
@@ -38,11 +39,29 @@ install-kind-bin:
 create-kind-cluster:
 	@echo "----- INSTALLING KIND CLUSTER -----"
 	kind create cluster --name $(CLUSTER_NAME) --config $(CLUSTER_CONFIG_PATH)
+
+install-ingress-controller:
+	@echo "----- INSTALLING INGRESS CONTROLLER -----"
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
 	kubectl wait --namespace ingress-nginx \
 	  --for=condition=ready pod \
 	  --selector=app.kubernetes.io/component=controller \
-	  --timeout=90s
+	  --timeout=300s
+
+create-cilium-kind-cluster:
+	@echo "----- INSTALLING KIND CLUSTER -----"
+	kind create cluster --name $(CLUSTER_NAME) --config $(CILIUM_CLUSTER_CONFIG_PATH)
+
+install-cilium-components:
+	kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
+	kubectl wait pod -l "k8s-app=cilium" --for condition=ready -n kube-system --timeout=300s
+	kubectl wait pod -l "k8s-app=kube-dns" --for condition=ready -n kube-system --timeout=300s
+	kubectl create ns cilium-test
+	kubectl apply -n cilium-test -f https://raw.githubusercontent.com/cilium/cilium/v1.9/examples/kubernetes/connectivity-check/connectivity-check.yaml
+	export CILIUM_NAMESPACE=kube-system
+	kubectl apply -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-hubble-install.yaml
+	kubectl apply -f ./cluster-components/hubble
+	kubectl wait pod -l "k8s-app=hubble-ui" --for condition=ready -n kube-system --timeout=300s
 
 test-ingress:
 	@echo "----- CREATING TEST INGRESS STACK -----"
@@ -58,6 +77,10 @@ delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
 
 install-requirements: | install-docker install-kubectl install-kind-bin
+
+create-standard-cluster: | create-kind-cluster install-ingress-controller
+
+create-cilium-cluster: | create-cilium-kind-cluster install-cilium-components install-ingress-controller
 
 help:
 	@echo "You have to use this makefile with sudo permissions"
