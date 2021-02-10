@@ -6,6 +6,7 @@ LSB_RELEASE=$$(lsb_release -cs)
 CLUSTER_CONFIG_PATH=cluster-definitions/multinode-ingress-cluster.yaml
 TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
 CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.yaml
+LINKERD_BASE_PATH=cluster-components/linkerd
 
 install-docker:
 	@echo "----- INSTALLING DOCKER -----"
@@ -73,6 +74,23 @@ test-ingress:
 	@echo ----- DELETE TEST INGRESS -----
 	@kubectl delete -f $(TEST_INGRESS_MANIFEST_PATH)
 
+install-linkerd-cli:
+	curl -sL https://run.linkerd.io/install | sh
+	sudo mv ~/.linkerd2/bin/linkerd-stable-2.9.3 /usr/local/bin/linkerd
+	rm -rf ~/.linkerd2
+	linkerd version
+	linkerd check --pre
+
+install-linkerd-components-k8s:
+	linkerd install > $(LINKERD_BASE_PATH)-kustom/linkerd.yaml
+	kubectl apply -k $(LINKERD_BASE_PATH)-kustom
+	linkerd check
+	rm $(LINKERD_BASE_PATH)-kustom/linkerd.yaml
+	curl -sL https://run.linkerd.io/emojivoto.yml | kubectl apply -f -
+	kubectl apply -f $(LINKERD_BASE_PATH)
+	kubectl get -n emojivoto deploy -o yaml | linkerd inject - | kubectl apply -f -
+	linkerd -n emojivoto check --proxy
+
 delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
 
@@ -81,6 +99,8 @@ install-requirements: | install-docker install-kubectl install-kind-bin
 create-standard-cluster: | create-kind-cluster install-ingress-controller
 
 create-cilium-cluster: | create-cilium-kind-cluster install-cilium-components install-ingress-controller
+
+create-linkerd-cluster: | create-standard-cluster install-linkerd-cli install-linkerd-components-k8s
 
 help:
 	@echo "You have to use this makefile with sudo permissions"

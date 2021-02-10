@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: linkerd-web
+spec:
+  template:
+    spec:
+      containers:
+        - name: web
+          args:
+            - -api-addr=linkerd-controller-api.linkerd.svc.cluster.local:8085
+            - -grafana-addr=linkerd-grafana.linkerd.svc.cluster.local:3000
+            - -controller-namespace=linkerd
+            - -log-level=info
+            - -enforced-host=^.*\.local$
