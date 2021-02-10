@@ -73,6 +73,19 @@ test-ingress:
 	@echo ----- DELETE TEST INGRESS -----
 	@kubectl delete -f $(TEST_INGRESS_MANIFEST_PATH)
 
+install-linkerd-cli:
+	curl -sL https://run.linkerd.io/install | sh
+	sudo mv ~/.linkerd2/bin/linkerd-stable-2.9.3 /usr/local/bin/linkerd
+	rm -rf ~/.linkerd2
+	linkerd version
+	linkerd check --pre
+
+install-linkerd-components-k8s:
+	linkerd install | kubectl apply -f -
+	linkerd check
+	kubectl apply -f cluster-components/linkerd
+	kubectl wait pod -l "linkerd.io/control-plane-component=web" --for condition=ready -n linkerd --timeout=300s
+
 delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
 
