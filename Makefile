@@ -82,8 +82,10 @@ install-linkerd-cli:
 
 install-linkerd-components-k8s:
 	linkerd install > cluster-components/linkerd/linkerd.yaml
-	kubectl kustomize build cluster-components/linkerd/ | kubectl apply -f -
+	kubectl apply -k cluster-components/linkerd/
 	linkerd check
+	rm cluster-components/linkerd/linkerd.yaml
+    kubectl apply -f cluster-components/linkerd/ingress.yml
 
 delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
@@ -93,6 +95,8 @@ install-requirements: | install-docker install-kubectl install-kind-bin
 create-standard-cluster: | create-kind-cluster install-ingress-controller
 
 create-cilium-cluster: | create-cilium-kind-cluster install-cilium-components install-ingress-controller
+
+create-linkerd-cluster: | create-standard-cluster install-linkerd-cli install-linkerd-components-k8s
 
 help:
 	@echo "You have to use this makefile with sudo permissions"
