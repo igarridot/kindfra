@@ -1,0 +1,4 @@
+resources:
+- linkerd.yaml
+patchesStrategicMerge:
+- web-ui.yaml

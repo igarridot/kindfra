@@ -81,10 +81,9 @@ install-linkerd-cli:
 	linkerd check --pre
 
 install-linkerd-components-k8s:
-	linkerd install | kubectl apply -f -
+	linkerd install > cluster-components/linkerd/linkerd.yaml
+	kubectl kustomize build cluster-components/linkerd/ | kubectl apply -f -
 	linkerd check
-	kubectl patch -f cluster-components/linkerd/linkerd-web.yml
-	kubectl wait pod -l "linkerd.io/control-plane-component=web" --for condition=ready -n linkerd --timeout=300s
 
 delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
