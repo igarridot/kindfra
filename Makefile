@@ -87,7 +87,7 @@ install-linkerd-components-k8s:
 	linkerd check
 	rm $(LINKERD_BASE_PATH)-kustom/linkerd.yaml
 	curl -sL https://run.linkerd.io/emojivoto.yml | kubectl apply -f -
-	kubectl apply -f $(LINKERD_BASE_PATH)/ingress.yml
+	kubectl apply -f $(LINKERD_BASE_PATH)
 	kubectl get -n emojivoto deploy -o yaml | linkerd inject - | kubectl apply -f -
 	linkerd -n emojivoto check --proxy
 
