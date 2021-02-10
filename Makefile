@@ -6,6 +6,7 @@ LSB_RELEASE=$$(lsb_release -cs)
 CLUSTER_CONFIG_PATH=cluster-definitions/multinode-ingress-cluster.yaml
 TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
 CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.yaml
+LINKERD_BASE_PATH=cluster-components/linkerd
 
 install-docker:
 	@echo "----- INSTALLING DOCKER -----"
@@ -81,11 +82,14 @@ install-linkerd-cli:
 	linkerd check --pre
 
 install-linkerd-components-k8s:
-	linkerd install > cluster-components/linkerd/linkerd.yaml
-	kubectl apply -k cluster-components/linkerd/
+	linkerd install > $(LINKERD_BASE_PATH)-kustom/linkerd.yaml
+	kubectl apply -k $(LINKERD_BASE_PATH)-kustom
 	linkerd check
-	rm cluster-components/linkerd/linkerd.yaml
-	kubectl apply -f cluster-components/linkerd/ingress.yml
+	rm $(LINKERD_BASE_PATH)-kustom/linkerd.yaml
+	curl -sL https://run.linkerd.io/emojivoto.yml | kubectl apply -f -
+	kubectl apply -f $(LINKERD_BASE_PATH)/ingress.yml
+	kubectl get -n emojivoto deploy -o yaml | linkerd inject - | kubectl apply -f -
+	linkerd -n emojivoto check --proxy
 
 delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
