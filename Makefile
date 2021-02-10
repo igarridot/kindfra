@@ -85,7 +85,7 @@ install-linkerd-components-k8s:
 	kubectl apply -k cluster-components/linkerd/
 	linkerd check
 	rm cluster-components/linkerd/linkerd.yaml
-    kubectl apply -f cluster-components/linkerd/ingress.yml
+	kubectl apply -f cluster-components/linkerd/ingress.yml
 
 delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
