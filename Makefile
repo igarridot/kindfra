@@ -7,6 +7,7 @@ CLUSTER_CONFIG_PATH=cluster-definitions/multinode-ingress-cluster.yaml
 TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
 CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.yaml
 LINKERD_BASE_PATH=cluster-components/linkerd
+METALLB_BASE_PATH=cluster-components/metallb
 
 install-docker:
 	@echo "----- INSTALLING DOCKER -----"
@@ -90,6 +91,13 @@ install-linkerd-components-k8s:
 	kubectl apply -f $(LINKERD_BASE_PATH)
 	kubectl get -n emojivoto deploy -o yaml | linkerd inject - | kubectl apply -f -
 	linkerd -n emojivoto check --proxy
+
+create-metallb-cluster:
+	kind create cluster --name $(CLUSTER_NAME) --config cluster-definitions/metallb-multinode-cluster.yaml
+	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml
+	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml
+	kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+	kubectl apply -f $(METALLB_BASE_PATH)
 
 delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
