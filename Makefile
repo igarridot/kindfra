@@ -99,6 +99,13 @@ create-metallb-cluster:
 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml
 	kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
 	kubectl apply -f $(METALLB_BASE_PATH)
+	kubectl run echo --image=inanimate/echo-server --port=8080
+	kubectl expose pod echo --type=LoadBalancer
+	wait 10
+	LB_IP=$$(kubectl get svc/echo -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
+	curl -IL http://$(LB_IP):8080/
+	kubectl delete service echo
+	kubectl delete pod echo
 
 delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
