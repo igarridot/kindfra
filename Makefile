@@ -94,6 +94,7 @@ install-linkerd-components-k8s:
 
 create-metallb-cluster:
 	kind create cluster --name $(CLUSTER_NAME) --config cluster-definitions/metallb-multinode-cluster.yaml
+	kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl diff -f - -n kube-system
 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml
 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml
 	kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
