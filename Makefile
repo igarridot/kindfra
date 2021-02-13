@@ -124,7 +124,7 @@ install-istio-k8s:
 	sleep 3
 	kubectl wait pod -l "app=productpage" --for condition=ready -n default --timeout=300s
 	istioctl analyze
-	kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
+	-kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
 	sleep 5
 	kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
 	kubectl rollout status deployment/kiali -n istio-system
