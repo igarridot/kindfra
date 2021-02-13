@@ -92,8 +92,7 @@ install-linkerd-components-k8s:
 	kubectl get -n emojivoto deploy -o yaml | linkerd inject - | kubectl apply -f -
 	linkerd -n emojivoto check --proxy
 
-create-metallb-cluster:
-	kind create cluster --name $(CLUSTER_NAME) --config cluster-definitions/metallb-multinode-cluster.yml
+install-metallb-k8s:
 	kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl diff -f - -n kube-system
 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml
 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml
@@ -110,6 +109,8 @@ create-standard-cluster: | create-kind-cluster install-ingress-controller
 create-cilium-cluster: | create-cilium-kind-cluster install-cilium-components install-ingress-controller
 
 create-linkerd-cluster: | create-standard-cluster install-linkerd-cli install-linkerd-components-k8s
+
+create-metallb-ingress-cluster: | create-kind-cluster install-metallb-k8s install-ingress-controller
 
 help:
 	@echo "You have to use this makefile with sudo permissions"
