@@ -126,6 +126,7 @@ install-istio-k8s:
     kubectl apply -f cluster-components/istio-1.9.0/samples/addons
     kubectl rollout status deployment/kiali -n istio-system
 	kubectl apply -f $(ISTIO_BASE_PATH)
+	rm -rf cluster-components/istio-1.9.0 istio-1.9.0-linux-amd64.tar.gz
 
 install-requirements: | install-docker install-kubectl install-kind-bin
 
