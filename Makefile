@@ -141,7 +141,7 @@ create-linkerd-cluster: | create-standard-cluster install-linkerd-cli install-li
 
 create-metallb-ingress-cluster: | create-kind-cluster install-metallb-k8s install-ingress-controller
 
-create-metallb-istio-ingress-cluster: | create-standard-cluster install-istio-cli install-istio-k8s
+create-metallb-istio-ingress-cluster: | create-metallb-ingress-cluster install-istio-cli install-istio-k8s
 
 help:
 	@echo "You have to use this makefile with sudo permissions"
