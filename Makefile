@@ -9,6 +9,7 @@ CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.
 LINKERD_BASE_PATH=cluster-components/linkerd
 METALLB_BASE_PATH=cluster-components/metallb
 ISTIO_BASE_PATH=cluster-components/istio
+ISTIO_VERSION=1.9.0
 
 install-docker:
 	@echo "----- INSTALLING DOCKER -----"
@@ -109,24 +110,24 @@ delete-kind-cluster:
 	kind delete cluster --name $(CLUSTER_NAME)
 
 install-istio-cli:
-	wget https://github.com/istio/istio/releases/download/1.9.0/istio-1.9.0-linux-amd64.tar.gz
-	tar xvzf istio-1.9.0-linux-amd64.tar.gz
-	mv  istio-1.9.0 cluster-components/
-	sudo mv cluster-components/istio-1.9.0/bin/istioctl /usr/local/bin/
+	wget https://github.com/istio/istio/releases/download/$(ISTIO_VERSION)/istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
+	tar xvzf istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
+	mv istio-$(ISTIO_VERSION) cluster-components/
+	sudo mv $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/bin/istioctl /usr/local/bin/
 
 install-istio-k8s:
 	istioctl install --set profile=demo -y
 	kubectl label namespace default istio-injection=enabled
-	kubectl apply -f cluster-components/istio-1.9.0/samples/bookinfo/platform/kube/bookinfo.yaml
-	kubectl apply -f cluster-components/istio-1.9.0/samples/bookinfo/networking/bookinfo-gateway.yaml
+	kubectl apply -f $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/samples/bookinfo/platform/kube/bookinfo.yaml
+	kubectl apply -f $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/samples/bookinfo/networking/bookinfo-gateway.yaml
 	kubectl wait pod -l "app=productpage" --for condition=ready -n default --timeout=300s
 	istioctl analyze
-    kubectl apply -f cluster-components/istio-1.9.0/samples/addons
+	kubectl apply -f $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/samples/addons
 	wait 5
-    kubectl apply -f cluster-components/istio-1.9.0/samples/addons
-    kubectl rollout status deployment/kiali -n istio-system
+	kubectl apply -f $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/samples/addons
+	kubectl rollout status deployment/kiali -n istio-system
 	kubectl apply -f $(ISTIO_BASE_PATH)
-	rm -rf cluster-components/istio-1.9.0 istio-1.9.0-linux-amd64.tar.gz
+	rm -rf $(ISTIO_BASE_PATH)-$(ISTIO_VERSION) istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
 
 install-requirements: | install-docker install-kubectl install-kind-bin
 
@@ -137,6 +138,8 @@ create-cilium-cluster: | create-cilium-kind-cluster install-cilium-components in
 create-linkerd-cluster: | create-standard-cluster install-linkerd-cli install-linkerd-components-k8s
 
 create-metallb-ingress-cluster: | create-kind-cluster install-metallb-k8s install-ingress-controller
+
+create-metallb-istio-ingress-cluster: | create-standard-cluster install-istio-cli install-istio-k8s
 
 help:
 	@echo "You have to use this makefile with sudo permissions"
