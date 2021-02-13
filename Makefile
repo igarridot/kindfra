@@ -112,22 +112,24 @@ delete-kind-cluster:
 install-istio-cli:
 	wget https://github.com/istio/istio/releases/download/$(ISTIO_VERSION)/istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
 	tar xvzf istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
-	mv istio-$(ISTIO_VERSION) cluster-components/
+	mv istio-$(ISTIO_VERSION)/samples $(ISTIO_BASE_PATH)/
 	sudo mv $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/bin/istioctl /usr/local/bin/
+	rm -rf istio-$(ISTIO_VERSION)-linux-amd64.tar.gz istio-$(ISTIO_VERSION)
 
 install-istio-k8s:
 	istioctl install --set profile=demo -y
 	kubectl label namespace default istio-injection=enabled
-	kubectl apply -f $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/samples/bookinfo/platform/kube/bookinfo.yaml
-	kubectl apply -f $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/samples/bookinfo/networking/bookinfo-gateway.yaml
+	kubectl apply -f $(ISTIO_BASE_PATH)/samples/bookinfo/platform/kube/bookinfo.yaml
+	kubectl apply -f $(ISTIO_BASE_PATH)/samples/bookinfo/networking/bookinfo-gateway.yaml
+	wait 3
 	kubectl wait pod -l "app=productpage" --for condition=ready -n default --timeout=300s
 	istioctl analyze
-	kubectl apply -f $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/samples/addons
+	kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
 	wait 5
-	kubectl apply -f $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/samples/addons
+	kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
 	kubectl rollout status deployment/kiali -n istio-system
+	rm -rf $(ISTIO_BASE_PATH)/samples istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
 	kubectl apply -f $(ISTIO_BASE_PATH)
-	rm -rf $(ISTIO_BASE_PATH)-$(ISTIO_VERSION) istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
 
 install-requirements: | install-docker install-kubectl install-kind-bin
 
