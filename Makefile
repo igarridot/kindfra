@@ -8,6 +8,8 @@ TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
 CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.yaml
 LINKERD_BASE_PATH=cluster-components/linkerd
 METALLB_BASE_PATH=cluster-components/metallb
+ISTIO_BASE_PATH=cluster-components/istio
+ISTIO_VERSION=1.9.0
 
 install-docker:
 	@echo "----- INSTALLING DOCKER -----"
@@ -107,6 +109,28 @@ delete-kind-cluster:
 	@echo "----- DELETING KIND CLUSTER -----"
 	kind delete cluster --name $(CLUSTER_NAME)
 
+install-istio-cli:
+	wget https://github.com/istio/istio/releases/download/$(ISTIO_VERSION)/istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
+	tar xvzf istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
+	mv istio-$(ISTIO_VERSION)/samples $(ISTIO_BASE_PATH)/
+	sudo mv istio-$(ISTIO_VERSION)/bin/istioctl /usr/local/bin/
+	rm -rf istio-$(ISTIO_VERSION)-linux-amd64.tar.gz istio-$(ISTIO_VERSION)
+
+install-istio-k8s:
+	istioctl install --set profile=demo -y
+	kubectl label namespace default istio-injection=enabled
+	kubectl apply -f $(ISTIO_BASE_PATH)/samples/bookinfo/platform/kube/bookinfo.yaml
+	kubectl apply -f $(ISTIO_BASE_PATH)/samples/bookinfo/networking/bookinfo-gateway.yaml
+	sleep 3
+	kubectl wait pod -l "app=productpage" --for condition=ready -n default --timeout=300s
+	istioctl analyze
+	-kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
+	sleep 5
+	kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
+	kubectl rollout status deployment/kiali -n istio-system
+	rm -rf $(ISTIO_BASE_PATH)/samples istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
+	kubectl apply -f $(ISTIO_BASE_PATH)
+
 install-requirements: | install-docker install-kubectl install-kind-bin
 
 create-standard-cluster: | create-kind-cluster install-ingress-controller
@@ -116,6 +140,8 @@ create-cilium-cluster: | create-cilium-kind-cluster install-cilium-components in
 create-linkerd-cluster: | create-standard-cluster install-linkerd-cli install-linkerd-components-k8s
 
 create-metallb-ingress-cluster: | create-kind-cluster install-metallb-k8s install-ingress-controller
+
+create-metallb-istio-ingress-cluster: | create-metallb-ingress-cluster install-istio-cli install-istio-k8s
 
 help:
 	@echo "You have to use this makefile with sudo permissions"
