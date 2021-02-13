@@ -121,11 +121,11 @@ install-istio-k8s:
 	kubectl label namespace default istio-injection=enabled
 	kubectl apply -f $(ISTIO_BASE_PATH)/samples/bookinfo/platform/kube/bookinfo.yaml
 	kubectl apply -f $(ISTIO_BASE_PATH)/samples/bookinfo/networking/bookinfo-gateway.yaml
-	wait 3
+	sleep 3
 	kubectl wait pod -l "app=productpage" --for condition=ready -n default --timeout=300s
 	istioctl analyze
 	kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
-	wait 5
+	sleep 5
 	kubectl apply -f $(ISTIO_BASE_PATH)/samples/addons
 	kubectl rollout status deployment/kiali -n istio-system
 	rm -rf $(ISTIO_BASE_PATH)/samples istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
