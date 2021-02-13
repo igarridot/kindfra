@@ -8,6 +8,7 @@ TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
 CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.yaml
 LINKERD_BASE_PATH=cluster-components/linkerd
 METALLB_BASE_PATH=cluster-components/metallb
+ISTIO_BASE_PATH=cluster-components/istio
 
 install-docker:
 	@echo "----- INSTALLING DOCKER -----"
@@ -106,6 +107,25 @@ install-metallb-k8s:
 delete-kind-cluster:
 	@echo "----- DELETING KIND CLUSTER -----"
 	kind delete cluster --name $(CLUSTER_NAME)
+
+install-istio-cli:
+	wget https://github.com/istio/istio/releases/download/1.9.0/istio-1.9.0-linux-amd64.tar.gz
+	tar xvzf istio-1.9.0-linux-amd64.tar.gz
+	mv  istio-1.9.0 cluster-components/
+	sudo mv cluster-components/istio-1.9.0/bin/istioctl /usr/local/bin/
+
+install-istio-k8s:
+	istioctl install --set profile=demo -y
+	kubectl label namespace default istio-injection=enabled
+	kubectl apply -f cluster-components/istio-1.9.0/samples/bookinfo/platform/kube/bookinfo.yaml
+	kubectl apply -f cluster-components/istio-1.9.0/samples/bookinfo/networking/bookinfo-gateway.yaml
+	kubectl wait pod -l "app=productpage" --for condition=ready -n default --timeout=300s
+	istioctl analyze
+    kubectl apply -f cluster-components/istio-1.9.0/samples/addons
+	wait 5
+    kubectl apply -f cluster-components/istio-1.9.0/samples/addons
+    kubectl rollout status deployment/kiali -n istio-system
+	kubectl apply -f $(ISTIO_BASE_PATH)
 
 install-requirements: | install-docker install-kubectl install-kind-bin
 
