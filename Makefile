@@ -55,6 +55,7 @@ create-cilium-kind-cluster:
 	kind create cluster --name $(CLUSTER_NAME) --config $(CILIUM_CLUSTER_CONFIG_PATH)
 
 install-cilium-components:
+	@echo "----- INSTALLING CILIUM -----"
 	kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
 	kubectl wait pod -l "k8s-app=cilium" --for condition=ready -n kube-system --timeout=300s
 	kubectl wait pod -l "k8s-app=kube-dns" --for condition=ready -n kube-system --timeout=300s
@@ -76,6 +77,7 @@ test-ingress:
 	@kubectl delete -f $(TEST_INGRESS_MANIFEST_PATH)
 
 install-linkerd-cli:
+	@echo "----- INSTALLING LINKERD CLI -----"
 	curl -sL https://run.linkerd.io/install | sh
 	sudo mv ~/.linkerd2/bin/linkerd-stable-2.9.3 /usr/local/bin/linkerd
 	rm -rf ~/.linkerd2
@@ -83,6 +85,7 @@ install-linkerd-cli:
 	linkerd check --pre
 
 install-linkerd-components-k8s:
+	@echo "----- INSTALLING LINKERD LINKERD -----"
 	linkerd install > $(LINKERD_BASE_PATH)-kustom/linkerd.yaml
 	kubectl apply -k $(LINKERD_BASE_PATH)-kustom
 	linkerd check
@@ -93,6 +96,7 @@ install-linkerd-components-k8s:
 	linkerd -n emojivoto check --proxy
 
 install-metallb-k8s:
+	@echo "----- INSTALLING LINKERD METALLB -----"
 	kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl diff -f - -n kube-system
 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml
 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml
@@ -100,6 +104,7 @@ install-metallb-k8s:
 	kubectl apply -f $(METALLB_BASE_PATH)
 
 delete-kind-cluster:
+	@echo "----- DELETING KIND CLUSTER -----"
 	kind delete cluster --name $(CLUSTER_NAME)
 
 install-requirements: | install-docker install-kubectl install-kind-bin
