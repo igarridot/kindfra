@@ -113,7 +113,7 @@ install-istio-cli:
 	wget https://github.com/istio/istio/releases/download/$(ISTIO_VERSION)/istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
 	tar xvzf istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
 	mv istio-$(ISTIO_VERSION)/samples $(ISTIO_BASE_PATH)/
-	sudo mv $(ISTIO_BASE_PATH)-$(ISTIO_VERSION)/bin/istioctl /usr/local/bin/
+	sudo mv istio-$(ISTIO_VERSION)/bin/istioctl /usr/local/bin/
 	rm -rf istio-$(ISTIO_VERSION)-linux-amd64.tar.gz istio-$(ISTIO_VERSION)
 
 install-istio-k8s:
