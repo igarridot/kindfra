@@ -19,11 +19,8 @@ install-docker:
 	    ca-certificates \
             curl \
             gnupg-agent \
-	    software-properties-common
-	sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(LSB_RELEASE) stable"
-	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-	sudo apt-get -y update
-	sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+	    software-properties-common \
+	    docker.io
 	-sudo groupadd docker
 	sudo usermod -aG docker ${USER}
 
