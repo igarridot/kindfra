@@ -5,6 +5,8 @@ An easy way to spin up a development kubernetes cluster with Kind.
 You will be able to create a multiworker kubernetes cluster with a few commands.
 The cluster is configured to do a port-forward from your local machine 80/TCP port to the Kind cluster 80/TCP port or use a LoadBalancer IP behavior in case of Metallb usage.
 
+And, if you want to go a bit further, you can also spin up a K8s cluster using your docker daemon using cluster-api.
+
 # Pre-requisites
 - Ubuntu OS Linux family
 - Make installed
@@ -24,12 +26,18 @@ make install-requirements
   - create-linkerd-cluster: standard kind cluster + linkerd + nginx ingress controller
   - create-metallb-ingress-cluster: standard kind cluster + metallb + nginx ingress controller
   - create-metallb-istio-ingress-cluster: standard kind cluster + metallb + istio + nginx ingress controller
+  - create-cluster-api-cluster: create a new kind cluster with access to your local docker sock file, with cluster-api, transforms the kind k8s cluster into the management cluster and spins up a k8s workload cluster. (No other content is deployed inside the worker cluster automatically, but you can run manually the desired Makefile targets)
 - Now you can interact with your cluster with standard kubectl commands.
 
 # How can I delete the k8s cluster?
 Just run the following command in the repo directory:
 ```
 make delete-kind-cluster
+```
+
+In case of cluster-api you can use the following command to clean properly the management-cluster objects and the docker containers:
+```
+make delete-cluster-api-env
 ```
 
 # How can I test the ingress?

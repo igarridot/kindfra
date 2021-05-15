@@ -6,6 +6,7 @@ LSB_RELEASE=$$(lsb_release -cs)
 CLUSTER_CONFIG_PATH=cluster-definitions/multinode-ingress-cluster.yaml
 TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
 CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.yaml
+CLUSTER_API_CLUSTER_CONFIG_PATH=cluster-definitions/cluster-api-docker-multinode-cluster.yaml
 LINKERD_BASE_PATH=cluster-components/linkerd
 METALLB_BASE_PATH=cluster-components/metallb
 ISTIO_BASE_PATH=cluster-components/istio
@@ -52,6 +53,10 @@ install-ingress-controller:
 create-cilium-kind-cluster:
 	@echo "----- INSTALLING KIND CLUSTER -----"
 	kind create cluster --name $(CLUSTER_NAME) --config $(CILIUM_CLUSTER_CONFIG_PATH)
+
+create-cluster-api-kind-cluster:
+	@echo "----- INSTALLING KIND CLUSTER -----"
+	kind create cluster --name $(CLUSTER_NAME) --config $(CLUSTER_API_CLUSTER_CONFIG_PATH)
 
 install-cilium-components:
 	@echo "----- INSTALLING CILIUM -----"
@@ -105,6 +110,7 @@ install-metallb-k8s:
 delete-kind-cluster:
 	@echo "----- DELETING KIND CLUSTER -----"
 	kind delete cluster --name $(CLUSTER_NAME)
+	docker system prune -fa
 
 install-istio-cli:
 	wget https://github.com/istio/istio/releases/download/$(ISTIO_VERSION)/istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
@@ -128,6 +134,36 @@ install-istio-k8s:
 	rm -rf $(ISTIO_BASE_PATH)/samples istio-$(ISTIO_VERSION)-linux-amd64.tar.gz
 	kubectl apply -f $(ISTIO_BASE_PATH)
 
+install-clusterctl:
+	curl -L https://github.com/kubernetes-sigs/cluster-api/releases/download/v0.3.16/clusterctl-linux-amd64 -o clusterctl
+	chmod +x ./clusterctl
+	sudo mv ./clusterctl /usr/local/bin/clusterctl
+	clusterctl version
+
+initialize-mgmt-cluster:
+	clusterctl init --infrastructure docker
+	sleep 60
+
+create-cluster-api-workload-cluster:
+	clusterctl config cluster capi-quickstart --flavor development \
+	--kubernetes-version v1.19.7 \
+	--control-plane-machine-count=3 \
+	--worker-machine-count=3 \
+	| kubectl apply -f -
+	sleep 90
+	clusterctl describe cluster capi-quickstart
+	clusterctl get kubeconfig capi-quickstart > capi-quickstart.kubeconfig
+
+install-cni-cluster-api-cluster:
+	kubectl --kubeconfig=./capi-quickstart.kubeconfig \
+	apply -f https://docs.projectcalico.org/v3.15/manifests/calico.yaml
+	sleep 60
+	kubectl --kubeconfig=./capi-quickstart.kubeconfig get nodes
+
+delete-cluster-api-cluster:
+	kubectl delete cluster capi-quickstart
+	sleep 60
+
 install-requirements: | install-docker install-kubectl install-kind-bin
 
 create-standard-cluster: | create-kind-cluster install-ingress-controller
@@ -139,6 +175,10 @@ create-linkerd-cluster: | create-standard-cluster install-linkerd-cli install-li
 create-metallb-ingress-cluster: | create-kind-cluster install-metallb-k8s install-ingress-controller
 
 create-metallb-istio-ingress-cluster: | create-metallb-ingress-cluster install-istio-cli install-istio-k8s
+
+create-cluster-api-cluster: | create-cluster-api-kind-cluster install-clusterctl initialize-mgmt-cluster create-cluster-api-workload-cluster install-cni-cluster-api-cluster
+
+delete-cluster-api-env: | delete-cluster-api-cluster delete-kind-cluster
 
 help:
 	@echo "You have to use this makefile with sudo permissions"

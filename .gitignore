@@ -16,3 +16,6 @@
 
 # Kubernetes secret manifests
 *.secret
+
+#Kubeconfig files
+*.kubeconfig
