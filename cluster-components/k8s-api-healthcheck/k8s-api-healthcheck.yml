@@ -27,6 +27,13 @@ spec:
     spec:
       containers:
       - name: application
-        image: norbega/k8s-api-healthcheck:v0.1.1
+        image: norbega/k8s-api-healthcheck:v0.1.6
+        resources:
+          requests:
+            cpu: 0.1
+            memory: 64Mi
+          limits:
+            cpu: 0.1
+            memory: 64Mi
         ports:
         - containerPort: 8080
