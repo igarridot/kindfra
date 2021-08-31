@@ -8,8 +8,8 @@ The cluster is configured to do a port-forward from your local machine 80/TCP po
 And, if you want to go a bit further, you can also spin up a K8s cluster using your docker daemon using cluster-api.
 
 # Pre-requisites
-- Ubuntu OS Linux family
 - Make installed
+- Ubuntu OS Linux family (or Kind already available and running)
 
 # Installation steps
 - Download this repo
@@ -30,7 +30,7 @@ make install-requirements
 - Now you can interact with your cluster with standard kubectl commands.
 
 # How can I delete the k8s cluster?
-Just run the following command in the repo directory:
+Just run the following command in the repo directory (WARNING: This command will perform a docker system clean up command):
 ```
 make delete-kind-cluster
 ```

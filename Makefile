@@ -164,6 +164,17 @@ delete-cluster-api-cluster:
 	kubectl delete cluster capi-quickstart
 	sleep 60
 
+install-kafka:
+	kubectl create namespace kafka
+	kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
+	kubectl wait pod -l "strimzi.io/kind=cluster-operator" --for condition=ready -n kafka --timeout=300s
+	kubectl apply -f cluster-components/kafka/kafka-cluster.yml
+	kubectl wait kafka/kafka-kind-cluster --for=condition=Ready --timeout=300s -n kafka 
+	@echo "Generate messages: kubectl -n kafka run kafka-producer -ti --image=quay.io/strimzi/kafka:0.25.0-kafka-2.8.0 --rm=true --restart=Never -- bin/kafka-console-producer.sh --broker-list kafka-kind-cluster-kafka-bootstrap:9092 --topic my-topic"
+	@echo "Consume messages: kubectl -n kafka run kafka-consumer -ti --image=quay.io/strimzi/kafka:0.25.0-kafka-2.8.0 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server kafka-kind-cluster-kafka-bootstrap:9092 --topic my-topic --from-beginning"
+	@echo "Follow the status of the pods with the following command: kubectl get pod -n kafka --watch"
+	@echo "Follow operator logs: kubectl logs deployment/strimzi-cluster-operator -n kafka -f"
+
 install-requirements: | install-docker install-kubectl install-kind-bin
 
 create-standard-cluster: | create-kind-cluster install-ingress-controller
