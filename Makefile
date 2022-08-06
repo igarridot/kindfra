@@ -60,14 +60,15 @@ create-cluster-api-kind-cluster:
 
 install-cilium-components:
 	@echo "----- INSTALLING CILIUM -----"
-	kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
+	kubectl apply -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
 	kubectl wait pod -l "k8s-app=cilium" --for condition=ready -n kube-system --timeout=300s
 	kubectl wait pod -l "k8s-app=kube-dns" --for condition=ready -n kube-system --timeout=300s
-	kubectl create ns cilium-test
+	-kubectl create ns cilium-test
 	kubectl apply -n cilium-test -f https://raw.githubusercontent.com/cilium/cilium/v1.9/examples/kubernetes/connectivity-check/connectivity-check.yaml
 	export CILIUM_NAMESPACE=kube-system
 	kubectl apply -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-hubble-install.yaml
 	kubectl apply -f ./cluster-components/hubble
+	sleep 3
 	kubectl wait pod -l "k8s-app=hubble-ui" --for condition=ready -n kube-system --timeout=300s
 
 test-ingress:
