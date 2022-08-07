@@ -1,0 +1,5 @@
+auth:
+  rbac:
+    create: false
+replicaCount: 3
+removeMemberOnContainerTermination: false

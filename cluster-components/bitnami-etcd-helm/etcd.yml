@@ -1,0 +1,244 @@
+---
+# Source: etcd/templates/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: stolon-etcd
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: etcd
+    helm.sh/chart: etcd-8.3.7
+    app.kubernetes.io/instance: stolon-etcd
+    app.kubernetes.io/managed-by: Helm
+spec:
+  minAvailable: 51%
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: etcd
+      app.kubernetes.io/instance: stolon-etcd
+---
+# Source: etcd/templates/token-secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: stolon-etcd-jwt-token
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: etcd
+    helm.sh/chart: etcd-8.3.7
+    app.kubernetes.io/instance: stolon-etcd
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  jwt-token.pem: "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlKS1FJQkFBS0NBZ0VBM0lFRHBMejBhQmZrZFBZZitKWUc4MURmOTRrQ25lYVpyQVExNGt3c21rZkJBV3hwCjBZbmNxdWY0OXFkeDcwc3UrVmkzbG8zNi9BVGpuZzAwbmxiYmxTSHI2dHFIa1VTVU0yejQvejhVV0ZkZ01XUmYKYUNkRG1jRDlwN0VtcXN3L0FsYXBUZmVaU2FhRlNTRVNWN0tyUnR3MzFTZk1tdGZxRitWV3pTZmU1bFlJQWh4bwpUTmVhYldrU01DKy9CT295YlpyMVFDZXJQZzEvVUtIelV5Q2VTTTF2QjhDSEljZm8xaGVRRnJhK2hsR2hQV2NuCmZtcllINm9aNjU3YWNwWU1mNmtFM3JGd01DUDJnNFp4T1dXV0swSTVPVGdyZmVnYkp0cXU1STIzRVFZQ0NXcFUKZjN6VENxdG5DZ0RXRHpxeWsvZVQ4UjFsdGhTWTJxc1lTcFUxZ1JrM3IvbVk0TnA2SEF1bkxPSEl5aUlzTFhFdwo2dTFsbi94em5OUkk4MlNMd3pGaSs2dlg5MUNQak5pTytDTnZxTHlPejM1dnRPQVVBQm44TnBlMnBQTk9FOFhEClFGOEdGL1drenhPMGdiOUdBWWxYM3EwR3dMczUvQnkybUlBTTJxMEhnRTFlMDBQNDVWWDBvUDY1TjVUOW5OY0sKWFlOckdPcDc0TkJYdWJIQUZjOUxwTjc3VkF2WVBXdW5odVcycXVmcllQVVBkVHZTQzRyUURjMEZnWUEyM2VoaQpHMkNZMlJKVTcvL3B6Q2d4bFBDZDArNk40Q2dHem5pYmZIbVg1UEYxcVlLckpqM1hHREkwREpxQmdQd01jUEpJCnZMbWNzNlczMnN3ejA2RWMwRThObzZYWlBaYzVmWFhZWXAyNHRFcTZZMlhPQmhIQXdEUk9kekxXblNFQ0F3RUEKQVFLQ0FnRUFuN1RGMmN5TnpOTDVRZ2w5OElOaE4xdnRTNUV0bHdZTmFYeUhOb2RyaXJiTHdPY3Y0WGRUbjJseQpkZHVqZHVqaWRmRGV6Nm00RGs3UU9ZcGhBUW54OHBybUQyMEY0WjVsSkxZWnhtMStvOWx0TDNqK2JTWjdIT0tlCkZaWUdacENXVm5CRUlkZGlhK2l6QXR0ME9KYU0zVDdsSlhxMUE3Vzh0R0FFTllWYU9VUTRlcWJ1bURGVWhVZ2oKeDBqZHRvYVZ6Ykw5VE9FdWN6dzlhVDVUU1hNSGtiMVJYTEVDYnVJbTd1R1VHQTkyQVQwZ1pxUFBCQTRJeVM1ZgpwYnVoaG5yTlJLMDdmTHZSZ055YlVIblFpZnpjL2lueDNsS2psWWJHRzZjcUl4bk5iUVFIOTUvTzRhT2NDMDlICnl3UCtCbnZDR2Mrb2xHdHhYcWFlYTBxZXhtNDVtQlpURVEzS05UQWN6QzRaTmlvb00xS3BZRmorcS9NOTRQSWEKWEx4VzNhRFhiTFdVd3ZjUEZzaHN4c1FkZWdtZmZZTHkrY2Vaa2ZiTjROVzNybmcySXRrcmtkUFBZaUtxc05EUwpzTHZvK3RFYlJVOTFwQkNDM28yMnFhaVR2VUtaWlBTZEpabEJGcFZKQVlzdWhTWFFZSUVhU0Fqd2dtTi9hbEp4CmFLclJpK3FoTFkxTndkS3VDNE5BbVBpTWhRRzhiVHFRWDgzb3dNa3FGT0l1b1hiYVlSYmVqcWJZaTFzR2ZHWDMKaDVrOVpxQXUrNVRZejRZQjE5TkFmT29jNTl4UFBQS0QxWEpFNHZEUVhlLzFLR296THdtN29KTkhqZkVzemRTaQpXRTRadWNLWW5hYXZmY2pQaEFDSm9QMk1pWUkrMHlRaFpXV0NxdXpKT3c2WUdIVFp4a0VDZ2dFQkFPZ0hZZmNmCm1xNGEyb09LRytBQ1ozbXBMTUNvbTlRcCtFaWQvVldBdXZVaFlEaXhxMkxwQVNlWjhiclpLZU5GUXd2SVlXRzMKRWlDajV5ank5NHUxY1YzUzZ3SVhCVktKc3RYRDdqN1RURkxBZDRYSFVDUFRFMjRRYnp3TjB5ZEpIUWFQcGlscApLc2ZwNktOM1VKNEx4M09pM3NXdk9LeHpYSXJ5SzhnejMzaHpuRGErdFhmaUw2TFpaQk1CN3A2N3c5Sk1keHM4Cis2L0hrdXpDcDgzYUM5czZPd0RKWFk0TUlaL1VybmFPUXVZdEthQjNNaU0rZUtyeFZ4WG9UZ3Z4RStOVWpETEoKcHNNNTNHL2pTUnJlM2QrYkF1SzdoOVVMYXhZN0tkQVVpMVBmaytVd0pIWDFGS1hrRUpCRmx4UndGME1ta3kxcwo4c2EwUFVZVTZ1Y0plUWtDZ2dFQkFQTkkwMTVjcklwU2MyNHFKaUsxbVY0cGsrRWRUc3FubkRSSWU3cWduNlEzCkJNTTg1ZU51eUNCSFdEUDB0aHdzZnBWUXkyN3h3MWtKbzVPUy83aGo3SkIzOGVSRXJQeFZpNGhDOEs4MFNDejUKRElKK2orcHhKZ2FJRWVPbjN3QWVQRzhkODQwWXczUSsrTFNKNE43NmZwL3JGMXkyYXNDQzYyNEg3Skhvb1lOZQpZK21kUnFRZml2NDBLT2dCdllzRXhGNUw2a3dHcCtXVjA0cFBkTnorWjZjek1sNFliaWYzNWpBWU8rRmIxc0s5ClIwcnRtNFIzM3Rod0cvdS83UG1jVGNrWTZWL3dxRHkxaXNIWElqMUdIWHZWdEZSYmkyMnp5Z3RCVVZWc1NEMmIKalNIYXF4SHc2bmtHRW5PVnVTaEhoWm9JWlZENk1vUjRPeWlWZ2UrZWdWa0NnZ0VBSnBnYnhuUStVVmxzSVZjVwpuZU1vZlFjVHg1UUVIMzAvckN5RFYvYUtvbjJEdU1wc3ZJNFBRQndPSmtzNitXK3E0RW5iVU5xWHJGQTNBZ3V2CisxQVo1RVpTQ3MzemQ3QXB5LzdFSVRVYVMrVnh2QkhVRmJGbFdQaG8yQzlnZ1BkYldaMEpRWGdad3BqNHRrQUIKYTloL3U0OUt5TTBGZTBIUkVkZUlTc3UrRHhZRDFPTlI0ZmdBZm5EMGdXamYzUTFVWENXVjVqVDFsRjU0NU9MWAo4SmlsUWpqa1daUWsrSnl4OXhqMFVBb0h2S3VrY2VtQnNIVVNzelJqak9SUUh4SmhnWDJ0dUVEc2VTcWxyUUs4ClJUanU1T091empIdFBSV2lJVmVEOC9XRzIxT2tFUW81OWxqbXIxVkpJQVpEUkFZRkNJbGhEN3hBZ2FhM1RuSHEKUkxYQnFRS0NBUUVBek8wM1BuRUoxYW9HR1hIZmxiVXFieXJPcWYwcDlZS2lEVmhSQUs5MFNic2VnK2EwTHBPTwpkOEloQmdMSHM0dTNSTWM5MVVKSXJxTno2a2NVcUpsakYzNHhmM3BwekZPeXFTRFo1SHRCb01CWVRVT1dyb0NJCjYwK0s0aHp4dHdQQkhFZzZjMHU4dUJxakhGQlgzdnRaMWhNTkpzZHh2SitLK0xBc0Vldkd3UVd0VzRkampiUVUKUEhSclVLTEdxbWRsa1ppWXoxbDc2K1A4d0xDVlcrSGdKZkwySmxTbDFYejNwT09FN1J1VEY0Nmdrdmo2MnVhdQpDOXJEZDVmL1lYTE1BdXk5Q0ZlTEh6ZzhuWE0rSUNjRGh1QkllaFp5cUFHZDIwVTE0YUxJWnp5ejhTUmtuVVExCi9hT2p2MEVMS21hMG56OGJPTTdINXRYdjN3dXcyOHJFWVFLQ0FRQTFBUFN5N0R0WGhzVEY5Z2Y2U1l3ZkZUWkYKRkN5MWZod1RTd3NJNDZRdUZuSUlEc05tRmdGakNmTlovUG43STVVM3BnQURuM0YxL1N5UGZFcnBoVWVpbmVqTwp6QWhzcGpxNWFRWHZmcTl2OWhuVCt2UnNMcmJwTnlSa0pBZk83d3pZSWwzdm5jNXRNMVAwTXlKcm1jY0paWW13Ci9jVGxhQW9SUzc4VGdibUF0ZFlsdDY2WjRFekwzNlhMN3ZMMlZ6WFJZNjNoL0Z0MGNVNm0vcHdpUkJ5eEJyaXcKSldqa0JlMmJEOVV0a2FYdEpWeHorUFRIc3QzQ1hHWW95M0pwZjBZeXNPUmMxc0dUYk5EY29MazZiNGptVnh6cgpWTFhTUmRYa3BkbWV4MUxKQWZCU2k1YmlkY1FKejY5aENTV0pZU0xGcnQ0ZFdoT1ovaWRYenJzcjhPYUcKLS0tLS1FTkQgUlNBIFBSSVZBVEUgS0VZLS0tLS0K"
+---
+# Source: etcd/templates/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: stolon-etcd-headless
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: etcd
+    helm.sh/chart: etcd-8.3.7
+    app.kubernetes.io/instance: stolon-etcd
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: client
+      port: 2379
+      targetPort: client
+    - name: peer
+      port: 2380
+      targetPort: peer
+  selector:
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/instance: stolon-etcd
+---
+# Source: etcd/templates/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: stolon-etcd
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: etcd
+    helm.sh/chart: etcd-8.3.7
+    app.kubernetes.io/instance: stolon-etcd
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+    - name: "client"
+      port: 2379
+      targetPort: client
+      nodePort: null
+    - name: "peer"
+      port: 2380
+      targetPort: peer
+      nodePort: null
+  selector:
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/instance: stolon-etcd
+---
+# Source: etcd/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: stolon-etcd
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: etcd
+    helm.sh/chart: etcd-8.3.7
+    app.kubernetes.io/instance: stolon-etcd
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: etcd
+      app.kubernetes.io/instance: stolon-etcd
+  serviceName: stolon-etcd-headless
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: etcd
+        helm.sh/chart: etcd-8.3.7
+        app.kubernetes.io/instance: stolon-etcd
+        app.kubernetes.io/managed-by: Helm
+      annotations:
+        checksum/token-secret: 5a3d33d7a1913b345379250d1571981813f828a5f3e384924fc01080827cb3ae
+    spec:
+      
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: etcd
+                    app.kubernetes.io/instance: stolon-etcd
+                namespaces:
+                  - "default"
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+      serviceAccountName: "default"
+      containers:
+        - name: etcd
+          image: docker.io/bitnami/etcd:3.5.4-debian-11-r22
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_STS_NAME
+              value: "stolon-etcd"
+            - name: ETCDCTL_API
+              value: "3"
+            - name: ETCD_ON_K8S
+              value: "yes"
+            - name: ETCD_START_FROM_SNAPSHOT
+              value: "no"
+            - name: ETCD_DISASTER_RECOVERY
+              value: "no"
+            - name: ETCD_NAME
+              value: "$(MY_POD_NAME)"
+            - name: ETCD_DATA_DIR
+              value: "/bitnami/etcd/data"
+            - name: ETCD_LOG_LEVEL
+              value: "info"
+            - name: ALLOW_NONE_AUTHENTICATION
+              value: "yes"
+            - name: ETCD_AUTH_TOKEN
+              value: "jwt,priv-key=/opt/bitnami/etcd/certs/token/jwt-token.pem,sign-method=RS256,ttl=10m"
+            - name: ETCD_ADVERTISE_CLIENT_URLS
+              value: "http://$(MY_POD_NAME).stolon-etcd-headless.default.svc.cluster.local:2379,http://stolon-etcd.default.svc.cluster.local:2379"
+            - name: ETCD_LISTEN_CLIENT_URLS
+              value: "http://0.0.0.0:2379"
+            - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
+              value: "http://$(MY_POD_NAME).stolon-etcd-headless.default.svc.cluster.local:2380"
+            - name: ETCD_LISTEN_PEER_URLS
+              value: "http://0.0.0.0:2380"
+            - name: ETCD_INITIAL_CLUSTER_TOKEN
+              value: "etcd-cluster-k8s"
+            - name: ETCD_INITIAL_CLUSTER_STATE
+              value: "new"
+            - name: ETCD_INITIAL_CLUSTER
+              value: "stolon-etcd-0=http://stolon-etcd-0.stolon-etcd-headless.default.svc.cluster.local:2380,stolon-etcd-1=http://stolon-etcd-1.stolon-etcd-headless.default.svc.cluster.local:2380,stolon-etcd-2=http://stolon-etcd-2.stolon-etcd-headless.default.svc.cluster.local:2380"
+            - name: ETCD_CLUSTER_DOMAIN
+              value: "stolon-etcd-headless.default.svc.cluster.local"
+          envFrom:
+          ports:
+            - name: client
+              containerPort: 2379
+              protocol: TCP
+            - name: peer
+              containerPort: 2380
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - /opt/bitnami/scripts/etcd/healthcheck.sh
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - /opt/bitnami/scripts/etcd/healthcheck.sh
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          resources:
+            limits: {}
+            requests: {}
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/etcd
+            - name: etcd-jwt-token
+              mountPath: /opt/bitnami/etcd/certs/token/
+              readOnly: true
+      volumes:
+        - name: etcd-jwt-token
+          secret:
+            secretName: stolon-etcd-jwt-token
+            defaultMode: 256
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"

@@ -1,0 +1,79 @@
+##
+## magic numbers obtained for calculations from https://wiki.postgresql.org/wiki/Pgbenchtesting
+##
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stolon-pg-benchmark
+  namespace: database
+  labels:
+    service: stolon-pg-benchmark
+spec:
+  template:
+    metadata:
+      labels:
+        service: stolon-pg-benchmark
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-cluster
+        image: sorintlab/stolon:master-pg14
+        command:
+        - pg_isready
+        args:
+        - --timeout=600
+        env:
+          - name: PGPASSWORD
+            value: admin
+          - name: PGUSER
+            value: admin
+          - name: PGHOST
+            value: postgres.database
+          - name: PGPORT
+            value: "5432"
+      - name: pgbench-init
+        image: sorintlab/stolon:master-pg14
+        command:
+        - pgbench
+        args:
+        - -i
+        # Set scale according the desired behaviour:
+        # buffer test   0.1 x RAM x 75 = 90
+        # mostly cache  0.9 x RAM x 75 = 810
+        # mostly disk   4.0 x RAM x 75 = 3600
+        - --scale=10
+        - test
+        env:
+          - name: PGPASSWORD
+            value: admin
+          - name: PGUSER
+            value: admin
+          - name: PGHOST
+            value: "postgres.database"
+          - name: PGPORT
+            value: "5432"
+      containers:
+      - name: benchmark
+        image: sorintlab/stolon:master-pg14
+        env:
+          - name: PGPASSWORD
+            value: admin
+          - name: PGUSER
+            value: admin
+          - name: PGHOST
+            value: "postgres.database"
+          - name: PGPORT
+            value: "5432"
+        command:
+        - pgbench
+        args:
+        - --log
+        - --report-latencies
+        - --client=2 # CPU x 2
+        - --jobs=1 # number of CPU
+#        - --transactions=2000 # per clients
+        - --time=600 # duration in seconds
+        - --rate=150 # targeted transactions per second
+#        - --select-only # read-only mode
+        - --progress=5 # show progress every X seconds
+        - test

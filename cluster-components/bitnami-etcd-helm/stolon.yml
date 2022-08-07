@@ -1,0 +1,652 @@
+## Client: kubectl run -i --rm --tty pg-client --image=sorintlab/stolon:master-pg14  --restart=Never -- bash -il
+# Connection: psql -h postgres.database -p 5432 -U admin -W -d postgres
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: database
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stolon-replication-user-pass
+  namespace: database
+data:
+  username: "repl"
+  password: "repl"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stolon-default-user-pass
+  namespace: database
+data:
+  username: "admin"
+  password: "admin"
+##---
+##apiVersion: batch/v1
+##kind: Job
+##metadata:
+##  name: stolon-cluster-init-postgres
+##  namespace: "database"
+##  labels:
+##    service: stolon-cluster-init-postgres
+##    component: "cluster-init"
+##    stolon-cluster: "postgres"
+##spec:
+##  backoffLimit: 1
+##  template:
+##    metadata:
+##      labels:
+##        service: stolon-cluster-init-postgres
+##        component: "cluster-init"
+##        stolon-cluster: "postgres"
+##    spec:
+##      terminationGracePeriodSeconds: 60
+##      restartPolicy: Never
+##      affinity:
+##        podAntiAffinity:
+##          preferredDuringSchedulingIgnoredDuringExecution:
+##          - weight: 1
+##            podAffinityTerm:
+##              labelSelector:
+##                matchExpressions:
+##                - key: service
+##                  operator: In
+##                  values:
+##                  - stolon-cluster-init-postgres
+##              topologyKey: kubernetes.io/hostname
+##        nodeAffinity:
+##          requiredDuringSchedulingIgnoredDuringExecution:
+##            nodeSelectorTerms:
+##              - matchExpressions:
+##                - key: "kubernetes.io/os"
+##                  operator: In
+##                  values: ["linux"]
+##      containers:
+##      - name: stolon-cluster-init
+##        image: sorintlab/stolon:master-pg14
+##        imagePullPolicy: IfNotPresent
+##        command: ["/usr/local/bin/stolonctl"]
+##        #args: ["--cluster-name=postgres","--store-backend=kubernetes","--kube-resource-kind=configmap","init","-y","-f","/data/cluster_config.json"]
+##        args: ["--cluster-name=postgres","--store-backend=etcdv3","--store-endpoints=http://stolon-etcd.default.svc.cluster.local:2379","init","-y","-f","/data/cluster_config.json"]
+##        resources:
+##          limits:
+##            memory: "200Mi"
+##            cpu: "0.1"
+##        volumeMounts:
+##        - name: config
+##          mountPath: /data
+##      volumes:
+##      - name: config
+##        configMap:
+##          name: cluster-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-config
+  annotations:
+    strategy.spinnaker.io/versioned: "false"
+  labels:
+    name: cluster-config
+    component: "cluster-init"
+    stolon-cluster: "postgres"
+  namespace: "database"
+data:
+  cluster_config.json: |
+    {
+      "initMode": "new",
+      "defaultSUReplAccessMode": "strict",
+      "synchronousReplication" : true,
+      "minSynchronousStandbys" : 1,
+      "maxSynchronousStandbys" : 2,
+      "pgParameters": {
+        "datestyle": "iso, dmy",
+        "default_text_search_config": "pg_catalog.english",
+        "dynamic_shared_memory_type": "posix",
+        "lc_messages": "en_US.utf8",
+        "lc_monetary": "en_US.utf8",
+        "lc_numeric": "en_US.utf8",
+        "lc_time": "en_US.utf8",
+        "log_timezone": "Etc/UTC",
+        "log_autovacuum_min_duration": "1",
+        "log_min_duration_statement": "1s",
+        "timezone": "Etc/UTC",
+        "max_connections": "50",
+        "shared_buffers": "560MB",
+        "effective_cache_size": "3GB",
+        "maintenance_work_mem": "64MB",
+        "checkpoint_completion_target": "0.95",
+        "wal_buffers": "16MB",
+        "default_statistics_target": "1000",
+        "random_page_cost": "4",
+        "effective_io_concurrency": "2",
+        "work_mem": "1024kB",
+        "min_wal_size": "1GB",
+        "max_wal_size": "2GB",
+        "max_worker_processes": "4",
+        "max_parallel_workers_per_gather": "2",
+        "shared_preload_libraries": "pg_stat_statements",
+        "wal_level": "replica",
+        "max_standby_archive_delay": "900s",
+        "max_standby_streaming_delay": "900s",
+        "autovacuum_vacuum_scale_factor": "0.1",
+        "autovacuum_analyze_scale_factor": "0.08",
+        "checkpoint_timeout": "15min",
+        "log_line_prefix": "%m %u[%r]:%d%a",
+        "bgwriter_delay": "150ms"
+      },
+      "pgHBA": [
+        "host all all 0.0.0.0/0 md5",
+        "host all all ::0/0 md5"
+      ]
+    }
+    
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stolon-keeper-postgres-0
+  namespace: "database"
+  labels:
+    stolon-component: stolon-keeper
+    stolon-cluster: postgres
+  annotations:
+    prometheus.io/should_be_scraped: "true"
+    prometheus.io/scrape_port: "8080"
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: cluster-metrics
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgre
+  - port: 9180
+    targetPort: 9180
+    protocol: TCP
+    name: pg-metrics
+  selector:
+    component: stolon-keeper
+    stolon-cluster: postgres
+    statefulset.kubernetes.io/pod-name: stolon-keeper-postgres-0
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stolon-keeper-postgres-1
+  namespace: "database"
+  labels:
+    stolon-component: stolon-keeper
+    stolon-cluster: postgres
+  annotations:
+    prometheus.io/should_be_scraped: "true"
+    prometheus.io/scrape_port: "8080"
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: cluster-metrics
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgre
+  - port: 9180
+    targetPort: 9180
+    protocol: TCP
+    name: pg-metrics
+  selector:
+    component: stolon-keeper
+    stolon-cluster: postgres
+    statefulset.kubernetes.io/pod-name: stolon-keeper-postgres-1
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stolon-keeper-postgres-2
+  namespace: "database"
+  labels:
+    stolon-component: stolon-keeper
+    stolon-cluster: postgres
+  annotations:
+    prometheus.io/should_be_scraped: "true"
+    prometheus.io/scrape_port: "8080"
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: cluster-metrics
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgre
+  - port: 9180
+    targetPort: 9180
+    protocol: TCP
+    name: pg-metrics
+  selector:
+    component: stolon-keeper
+    stolon-cluster: postgres
+    statefulset.kubernetes.io/pod-name: stolon-keeper-postgres-2
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: stolon-keeper-postgres
+  namespace: "database"
+  labels:
+    component: "stolon-keeper"
+    stolon-cluster: "postgres"
+spec:
+  revisionHistoryLimit: 3
+  replicas: 3
+  serviceName: stolon-keeper-postgres
+  selector:
+    matchLabels:
+      component: stolon-keeper
+      stolon-cluster: postgres
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: standard
+      resources:
+        requests:
+          storage: 100Gi
+  template:
+    metadata:
+      labels:
+        component: stolon-keeper
+        stolon-cluster: postgres
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: service
+                operator: In
+                values:
+                - stolon-keeper-postgres
+            topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "kubernetes.io/os"
+                operator: In
+                values: ["linux"]
+      restartPolicy: Always
+      containers:
+      - name: stolon-keeper-postgres
+        image: sorintlab/stolon:master-pg14
+        #command: ["/bin/bash","-ec","# Generate our keeper uid using the pod index\nADDR=$(tr '-' '_' \u003c\u003c\u003c \"$(hostname)\")\nexport STKEEPER_UID=\"${ADDR}\"\nexport POD_IP=$(hostname -i)\nexport STKEEPER_PG_LISTEN_ADDRESS=$POD_IP\nexport STOLON_DATA=/stolon-data\nchown stolon:stolon $STOLON_DATA\nexec gosu stolon stolon-keeper --cluster-name=postgres --data-dir $STOLON_DATA\n"]
+        command: ["/bin/bash","-ec","# Generate our keeper uid using the pod index\nADDR=$(tr '-' '_' \u003c\u003c\u003c \"$(hostname)\")\nexport STKEEPER_UID=\"${ADDR}\"\nexport POD_IP=$(hostname -i)\nexport STKEEPER_PG_LISTEN_ADDRESS=$POD_IP\nexport STOLON_DATA=/stolon-data\nchown stolon:stolon $STOLON_DATA\nexec gosu stolon stolon-keeper --cluster-name=postgres --store-backend=etcdv3 --store-endpoints=http://stolon-etcd.default.svc.cluster.local:2379 --data-dir $STOLON_DATA\n"]
+        ports:
+        - containerPort: 8080
+          name: cluster-metrics
+          protocol: TCP
+        - containerPort: 5432
+          name: postgre
+          protocol: TCP
+        - containerPort: 9180
+          name: pg-metrics
+          protocol: TCP
+        volumeMounts:
+        - name: data
+          mountPath: /stolon-data
+        - name: stolon
+          mountPath: /etc/secrets/stolon
+        resources:
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+          requests:
+            memory: "8Gi"
+            cpu: "4"
+        readinessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 60
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.name"
+        - name: STKEEPER_CLUSTER_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.labels['stolon-cluster']"
+        - name: STKEEPER_KUBE_RESOURCE_KIND
+          value: "configmap"
+        - name: STKEEPER_METRICS_LISTEN_ADDRESS
+          value: "0.0.0.0:8080"
+        - name: STKEEPER_PG_REPL_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: "stolon-replication-user-pass"
+              key: "password"
+        - name: STKEEPER_PG_REPL_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: "stolon-replication-user-pass"
+              key: "username"
+        - name: STKEEPER_PG_SU_PASSWORDFILE
+          value: "/etc/secrets/stolon/password"
+        - name: STKEEPER_PG_SU_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: "stolon-default-user-pass"
+              key: "username"
+        - name: STKEEPER_STORE_BACKEND
+          value: "kubernetes"
+      volumes:
+        - name: stolon
+          configMap:
+            name: stolon-default-user-pass
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: stolon-keeper-postgres
+  namespace: "database"
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      component: stolon-keeper
+      stolon-cluster: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: "database"
+  labels:
+    service: postgres
+  annotations:
+    prometheus.io/should_be_scraped: "true"
+    prometheus.io/scrape_port: "8080"
+    prometheus.io/should_be_probed: "true"
+    prometheus.io/probe_port: "5432"
+    prometheus.io/probe_tcp: "true"
+    networking.gke.io/load-balancer-type: Internal
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: metrics
+  selector:
+    component: stolon-proxy
+    stolon-cluster: postgres
+    proxy_role: read_write
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stolon-proxy-postgres
+  namespace: "database"
+  labels:
+    service: stolon-proxy-postgres
+spec:
+  revisionHistoryLimit: 3
+  replicas: 2
+  selector:
+    matchLabels:
+      component: stolon-proxy
+      stolon-cluster: postgres
+      proxy_role: read_write
+  minReadySeconds: 20
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 20%
+      maxSurge: 30%
+  template:
+    metadata:
+      labels:
+        component: stolon-proxy
+        stolon-cluster: postgres
+        proxy_role: read_write
+    spec:
+      terminationGracePeriodSeconds: 60
+      restartPolicy: Always
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: service
+                operator: In
+                values:
+                - stolon-proxy-postgres
+            topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: "kubernetes.io/os"
+                  operator: In
+                  values: ["linux"]
+      containers:
+      - name: stolon-proxy
+        image: sorintlab/stolon:master-pg14
+        imagePullPolicy: IfNotPresent
+        #command: ["/bin/bash","-ec","exec gosu stolon stolon-proxy --cluster-name=postgres\n"]
+        command: ["/bin/bash","-ec","exec gosu stolon stolon-proxy --cluster-name=postgres --store-backend=etcdv3 --store-endpoints=http://stolon-etcd.default.svc.cluster.local:2379\n"]
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+          name: postgres
+        - containerPort: 8080
+          protocol: TCP
+          name: metrics
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "0.5"
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.name"
+        - name: STPROXY_CLUSTER_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.labels['stolon-cluster']"
+        - name: STPROXY_KUBE_RESOURCE_KIND
+          value: "configmap"
+        - name: STPROXY_LISTEN_ADDRESS
+          value: "0.0.0.0"
+        - name: STPROXY_METRICS_LISTEN_ADDRESS
+          value: "0.0.0.0:8080"
+        - name: STPROXY_STORE_BACKEND
+          value: "kubernetes"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stolon-proxy-postgres
+  namespace: "database"
+  labels:
+    stolon-component: stolon-proxy
+    stolon-cluster: postgres
+    proxy_role: read_write
+  annotations:
+    prometheus.io/should_be_scraped: "true"
+    prometheus.io/scrape_port: "8080"
+    prometheus.io/should_be_probed: "true"
+    prometheus.io/probe_port: "5432"
+    prometheus.io/probe_tcp: "true"
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: metrics
+  selector:
+    component: stolon-proxy
+    stolon-cluster: postgres
+    proxy_role: read_write
+  type: ClusterIP
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: stolon
+  namespace: "database"
+rules:
+  - verbs:
+      - '*'
+    apiGroups:
+      - ''
+    resources:
+      - pods
+      - configmaps
+      - secrets
+      - events
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: stolon
+  namespace: "database"
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: "database"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: stolon
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stolon-sentinel-postgres
+  namespace: "database"
+  labels:
+    service: stolon-sentinel-postgres
+    component: "stolon-sentinel"
+    stolon-cluster: "postgres"
+spec:
+  revisionHistoryLimit: 3
+  replicas: 3
+  selector:
+    matchLabels:
+      component: "stolon-sentinel"
+      stolon-cluster: "postgres"
+  minReadySeconds: 20
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 20%
+      maxSurge: 30%
+  template:
+    metadata:
+      labels:
+        component: stolon-sentinel
+        stolon-cluster: postgres
+    spec:
+      terminationGracePeriodSeconds: 60
+      restartPolicy: Always
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: service
+                operator: In
+                values:
+                - stolon-sentinel-postgres
+            topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: "kubernetes.io/os"
+                  operator: In
+                  values: ["linux"]
+      containers:
+      - name: stolon-sentinel
+        image: sorintlab/stolon:master-pg14
+        imagePullPolicy: IfNotPresent
+        #command: ["/bin/bash","-ec","exec gosu stolon stolon-sentinel --cluster-name=postgres --initial-cluster-spec=/data/cluster_config.json\n"]
+        command: ["/bin/bash","-ec","exec gosu stolon stolon-sentinel --cluster-name=postgres --store-backend=etcdv3 --store-endpoints=http://stolon-etcd.default.svc.cluster.local:2379 --initial-cluster-spec=/data/cluster_config.json\n"]
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+          name: metrics
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "0.2"
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.name"
+        - name: STSENTINEL_CLUSTER_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.labels['stolon-cluster']"
+        - name: STSENTINEL_KUBE_RESOURCE_KIND
+          value: "configmap"
+        - name: STSENTINEL_METRICS_LISTEN_ADDRESS
+          value: "0.0.0.0:8080"
+        - name: STSENTINEL_STORE_BACKEND
+          value: "kubernetes"
+        volumeMounts:
+        - name: config
+          mountPath: /data
+      volumes:
+      - name: config
+        configMap:
+          name: cluster-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stolon-sentinel-postgres
+  namespace: "database"
+  labels:
+    stolon-component: stolon-sentinel
+    stolon-cluster: postgres
+    component: "stolon-sentinel"
+  annotations:
+    prometheus.io/should_be_scraped: "true"
+    prometheus.io/scrape_port: "8080"
+    prometheus.io/should_be_probed: "true"
+    prometheus.io/probe_path: /metrics
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: metrics
+  selector:
+    component: stolon-sentinel
+    stolon-cluster: postgres
+  type: ClusterIP
