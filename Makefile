@@ -7,6 +7,7 @@ CLUSTER_CONFIG_PATH=cluster-definitions/multinode-ingress-cluster.yaml
 TEST_INGRESS_MANIFEST_PATH=cluster-components/ingress-test
 CILIUM_CLUSTER_CONFIG_PATH=cluster-definitions/cilium-multinode-ingress-cluster.yaml
 CLUSTER_API_CLUSTER_CONFIG_PATH=cluster-definitions/cluster-api-docker-multinode-cluster.yaml
+CALICO_CLUSTER_CONFIG_PATH=cluster-definitions/calico-multinode-ingress-cluster.yaml
 LINKERD_BASE_PATH=cluster-components/linkerd
 METALLB_BASE_PATH=cluster-components/metallb
 ISTIO_BASE_PATH=cluster-components/istio
@@ -58,6 +59,10 @@ create-cluster-api-kind-cluster:
 	@echo "----- INSTALLING KIND CLUSTER -----"
 	kind create cluster --name $(CLUSTER_NAME) --config $(CLUSTER_API_CLUSTER_CONFIG_PATH)
 
+create-calico-cluster:
+	@echo "----- INSTALLING KIND CLUSTER -----"
+	kind create cluster --name $(CLUSTER_NAME) --config $(CALICO_CLUSTER_CONFIG_PATH)
+
 install-cilium-components:
 	@echo "----- INSTALLING CILIUM -----"
 	kubectl apply -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
@@ -103,9 +108,8 @@ install-linkerd-components-k8s:
 install-metallb-k8s:
 	@echo "----- INSTALLING LINKERD METALLB -----"
 	kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
-	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml
-	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml
-	kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.12/config/manifests/metallb-native.yaml
+	kubectl wait pods -l app=metallb -A --for condition=ready --timeout 300s
 	kubectl apply -f $(METALLB_BASE_PATH)
 
 delete-kind-cluster:
@@ -161,6 +165,10 @@ install-cni-cluster-api-cluster:
 	sleep 60
 	kubectl --kubeconfig=./capi-quickstart.kubeconfig get nodes
 
+install-calico-cluster:
+	kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.4/manifests/calico.yaml
+	kubectl wait pods -l k8s-app=calico-node -A --for condition=ready --timeout 300s
+
 delete-cluster-api-cluster:
 	kubectl delete cluster capi-quickstart
 	sleep 60
@@ -189,6 +197,8 @@ create-metallb-ingress-cluster: | create-kind-cluster install-metallb-k8s instal
 create-metallb-istio-ingress-cluster: | create-metallb-ingress-cluster install-istio-cli install-istio-k8s
 
 create-cluster-api-cluster: | create-cluster-api-kind-cluster install-clusterctl initialize-mgmt-cluster create-cluster-api-workload-cluster install-cni-cluster-api-cluster
+
+create-calico-ingress-cluster: | create-calico-cluster install-calico-cluster install-ingress-controller
 
 delete-cluster-api-env: | delete-cluster-api-cluster delete-kind-cluster
 
